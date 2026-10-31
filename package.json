@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "nest build api && nest build worker",
+    "build": "node api.js && nest build api && nest build worker",
     "postinstall": "tsc -p packages/shared-types/tsconfig.lib.json",
     "start:api": "nest start api --watch",
     "start:worker": "nest start worker --watch",

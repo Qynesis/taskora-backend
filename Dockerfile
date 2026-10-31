@@ -13,7 +13,7 @@ COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/shared-types/tsconfig.lib.json ./packages/shared-types/
 
 # Install ALL dependencies (including devDependencies for build)
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 
 
 # ─── Stage 2: Builder ───────────────────────────────────────────────────────
@@ -43,7 +43,31 @@ RUN npm config set fetch-retries 5 \
 COPY package.json package-lock.json ./
 COPY packages/shared-types/package.json ./packages/shared-types/
 
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm install --omit=dev --ignore-scripts
+
+
+
+# ─── Stage 5: Worker Production ─────────────────────────────────────────────
+FROM node:20-alpine AS worker
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Workspace manifests so npm resolves the @app/shared-types symlink
+COPY package.json package-lock.json ./
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY --from=prod-deps /app/node_modules ./node_modules
+
+# Copy shared-types compiled output (node_modules/@app/shared-types → packages/shared-types/dist/index.js)
+COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
+
+# Copy compiled app output
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 3001
+
+CMD ["node", "dist/apps/worker/main.js"]
 
 
 # ─── Stage 4: API Production ────────────────────────────────────────────────
@@ -69,24 +93,3 @@ EXPOSE 3000
 CMD ["node", "dist/apps/api/main.js"]
 
 
-# ─── Stage 5: Worker Production ─────────────────────────────────────────────
-FROM node:20-alpine AS worker
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-# Workspace manifests so npm resolves the @app/shared-types symlink
-COPY package.json package-lock.json ./
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY --from=prod-deps /app/node_modules ./node_modules
-
-# Copy shared-types compiled output (node_modules/@app/shared-types → packages/shared-types/dist/index.js)
-COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
-
-# Copy compiled app output
-COPY --from=builder /app/dist ./dist
-
-EXPOSE 3001
-
-CMD ["node", "dist/apps/worker/main.js"]
