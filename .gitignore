@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Environment
+.env
+.env.test
+.env.local
+.env.mvp
+
+# IDE
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Coverage
+coverage/
+
+# PM2
+.pm2/
+
+#env
+.env
+
+# graphify
+graphify-out/
+.graphify_python
+
+
+# Source images for the upload scripts
+/scripts/files/
